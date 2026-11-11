@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chai Tapri Café – Menu, Timing & Order</title>
+<meta name="description" content="Chai Tapri Café – fresh chai, snacks aur coffee. Menu dekho aur WhatsApp par order karo.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ====== CUSTOMIZE: sirf yahan se colors badlo ====== */
+:root{
+  --bg:#ffffff; --ink:#2a1515; --muted:#76605f;
+  --brand:#c8102e; --accent:#ffffff; --card:#ffffff; --line:#f1d5d8;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:Nunito,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+header{background:var(--brand);color:#fff;padding:56px 0 48px}
+header h1{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:800}
+header p{margin-top:10px;font-size:1.1rem;opacity:.9}
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.btn{display:inline-block;padding:12px 22px;border-radius:999px;font-weight:700;text-decoration:none}
+.btn.main{background:#fff;color:var(--brand)}
+.btn.alt{border:2px solid #fff;color:#fff}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+section{padding:44px 0}
+h2{font-size:1.9rem;margin-bottom:6px}
+.sub{color:var(--muted);margin-bottom:22px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
+.tabs button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:8px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+.tabs button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.item{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px dashed var(--line)}
+.item b{font-size:1.05rem}
+.item small{display:block;color:var(--muted)}
+.price{font-weight:700;white-space:nowrap}
+.info{display:grid;gap:14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.box h3{font-size:1.15rem;margin-bottom:6px}
+table{width:100%;border-collapse:collapse}
+td{padding:4px 0}
+td:last-child{text-align:right}
+iframe{width:100%;height:240px;border:0;border-radius:14px}
+footer{background:#8f0a20;color:#ffe3e6;padding:28px 0;text-align:center;font-size:.9rem}
+.qty{display:flex;align-items:center;gap:8px;margin-top:6px;justify-content:flex-end}
+.qty button{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--brand);background:var(--card);color:var(--brand);font-size:1.1rem;font-weight:700;cursor:pointer}
+.qty button.add{width:auto;padding:0 14px;border-radius:999px;font-size:.9rem;background:var(--brand);color:#fff}
+.qty span{min-width:18px;text-align:center;font-weight:700}
+.item .right{text-align:right}
+#order .box{margin-top:6px}
+.line{display:flex;justify-content:space-between;padding:4px 0}
+.total{border-top:2px solid var(--ink);margin-top:8px;padding-top:8px;font-weight:800;font-size:1.1rem}
+form label{display:block;font-weight:600;margin-top:12px}
+form input,form select,form textarea{width:100%;margin-top:4px;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+form input:focus,form select:focus,form textarea:focus{outline:3px solid #f4a6b0;border-color:var(--brand)}
+.send{width:100%;margin-top:16px;border:0;background:#25d366;color:#fff;font:inherit;font-weight:800;padding:14px;border-radius:999px;cursor:pointer}
+.msg{margin-top:10px;color:#a33;font-weight:600}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{aspect-ratio:1;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2.6rem;color:#fff;position:relative}
+.tile img{width:100%;height:100%;object-fit:cover}
+.tile small{font-size:.85rem;font-weight:700;margin-top:4px}
+.review{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.stars{color:var(--brand);letter-spacing:2px}
+.review b{display:block;margin-top:8px}
+[hidden]{display:none!important}
+.tag{display:inline-block;margin-top:14px;background:#fff;color:var(--brand);font-weight:800;padding:6px 16px;border-radius:999px}
+.status{text-align:center}
+.status .big{font-size:1.5rem;font-family:Fraunces,Georgia,serif;font-weight:800;color:var(--brand)}
+.status button{margin-top:14px;border:2px solid var(--brand);background:#fff;color:var(--brand);padding:10px 20px;border-radius:999px;font:inherit;font-weight:700;cursor:pointer}
+.float{position:fixed;right:16px;bottom:16px;background:#25d366;color:#fff;padding:14px 20px;border-radius:999px;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Chai Tapri Café</h1>
+    <p>Taazi chai, garam snacks aur strong coffee. Dost ke saath baithne ki jagah.</p>
+    <p id="tableTag" class="tag" hidden></p>
+    <div class="btns">
+      <a class="btn main" href="#menu">Menu dekho</a>
+      <a class="btn alt" href="tel:+919999999999">Call karo</a>
+    </div>
+  </div>
+</header>
+
+<section id="menu">
+  <div class="wrap">
+    <h2>Menu</h2>
+    <p class="sub">Category chuno. Order karne ke liye neeche WhatsApp button dabao.</p>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
+  </div>
+</section>
+
+<section id="order">
+  <div class="wrap">
+    <h2>Online order</h2>
+    <p class="sub">Menu me se items chuno (+ dabao), phir details bharo. Order seedha hamare WhatsApp par aayega.</p>
+    <div class="box">
+      <h3>Aapka order</h3>
+      <div id="cart"><p class="sub" style="margin:0">Abhi koi item nahi chuna.</p></div>
+    </div>
+    <form id="orderForm" class="box">
+      <label for="name">Naam</label>
+      <input id="name" autocomplete="name" required>
+      <label for="type">Order type</label>
+      <select id="type">
+        <option>Dine-in</option>
+        <option>Pickup</option>
+        <option>Home delivery</option>
+      </select>
+      <label for="addr">Table number / Pata</label>
+      <input id="addr" placeholder="Jaise: Table 4, ya ghar ka pata">
+      <label for="note">Note (optional)</label>
+      <textarea id="note" rows="2" placeholder="Jaise: kam cheeni, extra cheese"></textarea>
+      <button class="send" type="submit">WhatsApp par order bhejo</button>
+      <p class="msg" id="msg" role="alert"></p>
+    </form>
+    <div class="box status" id="status" hidden></div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="wrap">
+    <h2>Gallery</h2>
+    <p class="sub">Hamare café ki jhalak.</p>
+    <div class="gallery" id="gal"></div>
+  </div>
+</section>
+
+<section id="reviews">
+  <div class="wrap">
+    <h2>Customers kya kehte hain</h2>
+    <p class="sub">Google reviews se.</p>
+    <div id="rev"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap info">
+    <div class="box">
+      <h3>Timing</h3>
+      <table>
+        <tr><td>Somvar – Shukravar</td><td>8:00 AM – 11:00 PM</td></tr>
+        <tr><td>Shanivar – Ravivar</td><td>8:00 AM – 12:00 AM</td></tr>
+      </table>
+    </div>
+    <div class="box">
+      <h3>Pata</h3>
+      <p>Shop No. 12, Main Market, Aapka Shehar – 000000</p>
+    </div>
+    <iframe title="Map" loading="lazy" src="https://www.google.com/maps?q=Main+Market&output=embed"></iframe>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">© Chai Tapri Café · Instagram: @chaitapricafe</div>
+</footer>
+
+<a class="float" id="wa" href="#">WhatsApp par order</a>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDnJ64cQjrzze4U9g1HYI3rYV8LRqxxum4",
+  authDomain: "cafe-demo-dfc2c.firebaseapp.com",
+  projectId: "cafe-demo-dfc2c",
+  storageBucket: "cafe-demo-dfc2c.firebasestorage.app",
+  messagingSenderId: "1020470351323",
+  appId: "1:1020470351323:web:485e01607ca7ca1f36c3fe"
+};
+const db = getFirestore(initializeApp(firebaseConfig));
+
+/* Table number link se aata hai: ...?table=4 */
+const TABLE = (new URLSearchParams(location.search).get("table") || "").trim().slice(0,10);
+
+/* ====== CUSTOMIZE: yahan se shop ka data badlo ====== */
+const PHONE = "919999999999"; // country code ke saath, bina + ke
+const MENU = {
+  "Chai & Coffee": [
+    ["Masala Chai","Adrak elaichi wali",30],
+    ["Cutting Chai","Half cup, full swaad",15],
+    ["Cold Coffee","Thick aur chilled",120],
+    ["Filter Coffee","South Indian style",60]
+  ],
+  "Snacks": [
+    ["Veg Sandwich","Grilled, cheese ke saath",90],
+    ["Maggi","Masala ya cheese",70],
+    ["Samosa (2 pc)","Chutney ke saath",30],
+    ["French Fries","Peri peri",110]
+  ],
+  "Meetha": [
+    ["Brownie","Garam, ice cream ke saath",140],
+    ["Chocolate Shake","Extra thick",130]
+  ]
+};
+
+const tabs = document.getElementById("tabs");
+const list = document.getElementById("list");
+let current = Object.keys(MENU)[0];
+
+function render(){
+  tabs.innerHTML = "";
+  Object.keys(MENU).forEach(cat=>{
+    const b = document.createElement("button");
+    b.textContent = cat;
+    b.setAttribute("aria-pressed", cat===current);
+    b.onclick = ()=>{ current = cat; render(); };
+    tabs.appendChild(b);
+  });
+  list.innerHTML = MENU[current].map(([n,d,p],i)=>{
+    const q = cart[n]?.qty || 0;
+    const ctrl = q===0
+      ? `<button class="add" data-i="${i}" data-d="1">Add</button>`
+      : `<button data-i="${i}" data-d="-1" aria-label="Kam karo">−</button><span>${q}</span><button data-i="${i}" data-d="1" aria-label="Badhao">+</button>`;
+    return `<div class="item"><div><b>${n}</b><small>${d}</small></div><div class="right"><span class="price">₹${p}</span><div class="qty">${ctrl}</div></div></div>`;
+  }).join("");
+  list.querySelectorAll("button[data-i]").forEach(b=>{
+    b.onclick = ()=>{ const [n,,p] = MENU[current][b.dataset.i]; change(n,p,+b.dataset.d); };
+  });
+}
+
+/* ---------- Cart ---------- */
+const cart = {};
+const cartEl = document.getElementById("cart");
+function change(name, price, d){
+  const q = Math.max(0,(cart[name]?.qty||0)+d);
+  if(q===0) delete cart[name]; else cart[name] = {price, qty:q};
+  render(); renderCart();
+}
+function total(){ return Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0); }
+function renderCart(){
+  const keys = Object.keys(cart);
+  if(!keys.length){ cartEl.innerHTML = '<p class="sub" style="margin:0">Abhi koi item nahi chuna.</p>'; return; }
+  cartEl.innerHTML = keys.map(k=>`<div class="line"><span>${cart[k].qty} × ${k}</span><span>₹${cart[k].price*cart[k].qty}</span></div>`).join("")
+    + `<div class="line total"><span>Total</span><span>₹${total()}</span></div>`;
+}
+render();
+
+/* ---------- Order → WhatsApp ---------- */
+const val = id => document.getElementById(id).value.trim();
+document.getElementById("orderForm").onsubmit = e=>{
+  e.preventDefault();
+  const msg = document.getElementById("msg");
+  if(!Object.keys(cart).length){ msg.textContent = "Pehle menu se kam se kam ek item chuno."; return; }
+  msg.textContent = "";
+  if(TABLE){ sendToKitchen(msg); return; }
+  const lines = Object.entries(cart).map(([n,i])=>`- ${i.qty} x ${n} = ₹${i.price*i.qty}`).join("\n");
+  const text = `Hi! Mujhe order karna hai:\n${lines}\nTotal: ₹${total()}\n\nNaam: ${val("name")}\nType: ${val("type")}\nTable/Pata: ${val("addr") || "-"}\nNote: ${val("note") || "-"}`;
+  window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(text)}`, "_blank");
+};
+
+/* ---------- Table order → Kitchen ---------- */
+const form = document.getElementById("orderForm");
+const statusBox = document.getElementById("status");
+if(TABLE){
+  const tag = document.getElementById("tableTag");
+  tag.textContent = "Aap Table " + TABLE + " par hain"; tag.hidden = false;
+  ["type","addr"].forEach(id=>{ const el = document.getElementById(id); el.hidden = true; el.previousElementSibling.hidden = true; });
+  document.getElementById("name").required = false;
+  document.querySelector('label[for="name"]').textContent = "Naam (optional)";
+  document.querySelector(".send").textContent = "Table " + TABLE + " par order bhejo";
+  document.querySelector("#order .sub").textContent = "Menu se items chuno (Add dabao), phir neeche order bhejo. Aapko table par hi mil jayega.";
+}
+async function sendToKitchen(msg){
+  const btn = document.querySelector(".send");
+  btn.disabled = true; btn.textContent = "Bhej rahe hain...";
+  const items = Object.entries(cart).map(([n,i])=>({name:n, qty:i.qty, price:i.price}));
+  const sum = total();
+  try{
+    const ref = await addDoc(collection(db,"orders"), {
+      table:TABLE, name:val("name"), note:val("note"), items, total:sum,
+      status:"new", createdAt:serverTimestamp()
+    });
+    Object.keys(cart).forEach(k=>delete cart[k]);
+    render(); renderCart();
+    form.hidden = true;
+    track(ref.id, items, sum);
+  }catch(err){
+    console.error(err);
+    msg.textContent = "Order nahi gaya. Internet check karke dobara try karo.";
+    btn.disabled = false; btn.textContent = "Table " + TABLE + " par order bhejo";
+  }
+}
+const STEPS = {
+  new: ["Order bhej diya", "Kitchen ko mil gaya hai. Confirm hote hi yahan dikhega."],
+  preparing: ["Order confirm ho gaya", "Aapka order ban raha hai."],
+  ready: ["Order ready hai", "Aapka order Table " + TABLE + " par aa raha hai."],
+  done: ["Order poora hua", "Dhanyavaad! Fir aana."]
+};
+function track(id, items, sum){
+  const lines = items.map(i=>`<div class="line"><span>${i.qty} × ${i.name}</span><span>₹${i.price*i.qty}</span></div>`).join("");
+  statusBox.hidden = false;
+  onSnapshot(doc(db,"orders",id), snap=>{
+    const st = (snap.data()||{}).status || "new";
+    const [t,d] = STEPS[st] || STEPS.new;
+    statusBox.innerHTML = `<div class="big">${t}</div><p>${d}</p><div style="text-align:left;margin-top:12px">${lines}<div class="line total"><span>Total</span><span>₹${sum}</span></div></div>`
+      + (st==="done" ? '<button id="again">Aur order karo</button>' : '');
+    const again = document.getElementById("again");
+    if(again) again.onclick = ()=>{ statusBox.hidden = true; form.hidden = false; const b = document.querySelector(".send"); b.disabled = false; b.textContent = "Table " + TABLE + " par order bhejo"; };
+  });
+}
+
+/* ====== CUSTOMIZE: Gallery ======
+   Asli photo ke liye "src" me file ka naam likho (jaise "photos/chai.jpg")
+   aur photo ko is HTML ke saath ek "photos" folder me rakho. Khali chodo to rang wala tile dikhega. */
+const GALLERY = [
+  {src:"", label:"Masala Chai", emoji:"☕", bg:"#c8102e"},
+  {src:"", label:"Sandwich", emoji:"🥪", bg:"#e0455a"},
+  {src:"", label:"Brownie", emoji:"🍫", bg:"#8f0a20"},
+  {src:"", label:"Seating", emoji:"🪑", bg:"#a30d26"},
+  {src:"", label:"Cold Coffee", emoji:"🧋", bg:"#d9334a"},
+  {src:"", label:"Snacks", emoji:"🍟", bg:"#b5162f"}
+];
+document.getElementById("gal").innerHTML = GALLERY.map(g=> g.src
+  ? `<div class="tile"><img src="${g.src}" alt="${g.label}" loading="lazy"></div>`
+  : `<div class="tile" style="background:${g.bg}" role="img" aria-label="${g.label}"><span>${g.emoji}</span><small>${g.label}</small></div>`
+).join("");
+
+/* ====== CUSTOMIZE: Reviews (asli Google reviews yahan paste karo) ====== */
+const REVIEWS = [
+  ["Rohit S.", 5, "Chai ekdum tapri jaisi hai aur baithne ki jagah bhi badhiya. Roz aata hu."],
+  ["Priya M.", 5, "Sandwich aur cold coffee best the. Staff bahut friendly hai."],
+  ["Aman K.", 4, "Prices sahi hain, WhatsApp se order karna bahut easy raha."]
+];
+document.getElementById("rev").innerHTML = REVIEWS.map(([n,s,t])=>
+  `<div class="review"><div class="stars" aria-label="${s} star">${"★".repeat(s)}${"☆".repeat(5-s)}</div><p>${t}</p><b>${n}</b></div>`
+).join("");
+
+document.getElementById("wa").href =
+  `https://wa.me/${PHONE}?text=${encodeURIComponent("Hi! Mujhe order karna hai.")}`;
+</script>
+</body>
+</html>
