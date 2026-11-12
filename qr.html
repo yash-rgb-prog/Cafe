@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Table QR codes</title>
+<style>
+:root{--brand:#c8102e;--ink:#2a1515;--line:#f1d5d8}
+[hidden]{display:none!important}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,sans-serif;color:var(--ink);padding:16px;max-width:900px;margin:0 auto}
+h1{color:var(--brand);font-size:1.5rem;margin-bottom:12px}
+.panel{border:1.5px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:700;margin-top:10px}
+input{width:100%;margin-top:4px;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit}
+button{margin-top:14px;font:inherit;font-weight:800;border:0;border-radius:999px;background:var(--brand);color:#fff;padding:13px 22px;cursor:pointer}
+button.alt{background:#fff;color:var(--brand);border:2px solid var(--brand);margin-left:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{border:2px solid var(--brand);border-radius:18px;padding:16px;text-align:center;break-inside:avoid;background:#fff}
+.card .cafe{font-weight:800;color:var(--brand);font-size:1.1rem}
+.card .tn{font-size:2rem;font-weight:800;margin:6px 0}
+.qr{display:flex;justify-content:center;margin:8px 0}
+.qr img,.qr canvas{max-width:100%;height:auto}
+.card small{display:block;color:#76605f;margin-top:6px}
+.url{word-break:break-all;font-size:.7rem}
+@media print{
+  .panel,h1{display:none}
+  body{padding:0}
+  .grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<h1>Table QR codes</h1>
+<div class="panel">
+  <label for="cafe">Cafe ka naam</label>
+  <input id="cafe" value="Chai Tapri Café">
+  <label for="base">Website ka link</label>
+  <input id="base" value="https://yash-rgb-prog.github.io/Cafe/" inputmode="url">
+  <label for="n">Kitne tables?</label>
+  <input id="n" type="number" min="1" max="60" value="6">
+  <button id="make">QR banao</button>
+  <button id="print" class="alt" hidden>Print / PDF save</button>
+</div>
+<div class="grid" id="grid"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+var grid = document.getElementById("grid");
+document.getElementById("make").onclick = function(){
+  var cafe = document.getElementById("cafe").value.trim();
+  var base = document.getElementById("base").value.trim();
+  var n = Math.min(60, Math.max(1, parseInt(document.getElementById("n").value) || 1));
+  if(!/^https?:\/\//.test(base)){ alert("Link https:// se shuru hona chahiye."); return; }
+  if(base.charAt(base.length-1) !== "/") base += "/";
+  if(typeof QRCode === "undefined"){ alert("QR library load nahi hui. Internet check karo aur dobara try karo."); return; }
+  grid.innerHTML = "";
+  for(var t = 1; t <= n; t++){
+    var url = base + "?table=" + t;
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<div class="cafe"></div><div class="tn">Table ' + t + '</div><div class="qr"></div><div><b>Scan karo, order karo</b></div><small class="url"></small>';
+    card.querySelector(".cafe").textContent = cafe;
+    card.querySelector(".url").textContent = url;
+    grid.appendChild(card);
+    new QRCode(card.querySelector(".qr"), {text:url, width:180, height:180, correctLevel:QRCode.CorrectLevel.M});
+  }
+  document.getElementById("print").hidden = false;
+};
+document.getElementById("print").onclick = function(){ window.print(); };
+</script>
+</body>
+</html>
