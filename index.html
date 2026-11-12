@@ -291,7 +291,8 @@ const STEPS = {
   ready: ["Order ready hai", "Aapka order Table " + TABLE + " par aa raha hai."],
   done: ["Order poora hua", "Dhanyavaad! Fir aana."]
 };
-function track(id, items, sum){
+function track(id, items, sum, resumed){
+  if(!resumed){ try{ localStorage.setItem("cafeOrder", JSON.stringify({id, items, sum, table:TABLE, t:Date.now()})); }catch(e){} }
   const lines = items.map(i=>`<div class="line"><span>${i.qty} × ${i.name}</span><span>₹${i.price*i.qty}</span></div>`).join("");
   statusBox.hidden = false;
   onSnapshot(doc(db,"orders",id), snap=>{
@@ -299,10 +300,21 @@ function track(id, items, sum){
     const [t,d] = STEPS[st] || STEPS.new;
     statusBox.innerHTML = `<div class="big">${t}</div><p>${d}</p><div style="text-align:left;margin-top:12px">${lines}<div class="line total"><span>Total</span><span>₹${sum}</span></div></div>`
       + (st==="done" ? '<button id="again">Aur order karo</button>' : '');
+    if(st==="done"){ try{ localStorage.removeItem("cafeOrder"); }catch(e){} }
     const again = document.getElementById("again");
     if(again) again.onclick = ()=>{ statusBox.hidden = true; form.hidden = false; const b = document.querySelector(".send"); b.disabled = false; b.textContent = "Table " + TABLE + " par order bhejo"; };
   });
 }
+
+/* Page reload ho jaye to order ka status wapas dikhao (4 ghante tak) */
+try{
+  const sv = JSON.parse(localStorage.getItem("cafeOrder") || "null");
+  if(TABLE && sv && sv.table === TABLE && Date.now() - sv.t < 4*3600*1000){
+    form.hidden = true;
+    track(sv.id, sv.items, sv.sum, true);
+    document.getElementById("order").scrollIntoView();
+  }
+}catch(e){}
 
 /* ====== CUSTOMIZE: Gallery ======
    Asli photo ke liye "src" me file ka naam likho (jaise "photos/chai.jpg")
