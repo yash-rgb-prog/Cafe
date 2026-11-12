@@ -17,6 +17,8 @@ button{font:inherit;font-weight:700;border-radius:999px;border:2px solid var(--b
 button.fill{background:var(--brand);color:#fff}
 #start{position:fixed;inset:0;background:var(--brand);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;z-index:5}
 #start button{background:#fff;color:var(--brand);font-size:1.2rem;padding:16px 32px;border:0}
+#start .login{display:grid;gap:10px;width:100%;max-width:320px}
+#start input{padding:14px;border-radius:12px;border:0;font:inherit;width:100%}
 #list{display:grid;gap:14px}
 .card{border:2px solid var(--line);border-radius:16px;padding:16px}
 .card.new{border-color:var(--brand);background:#fff4f5}
@@ -34,8 +36,13 @@ button.fill{background:var(--brand);color:#fff}
 
 <div id="start">
   <h1 style="color:#fff">Kitchen screen</h1>
-  <p>Order aane par awaaz ke liye neeche button ek baar dabao.<br>Is phone ki volume badha ke rakho.</p>
-  <button id="go">Shuru karo</button>
+  <div id="loginFields" class="login">
+    <input id="em" type="email" placeholder="Email" autocomplete="username" value="kitchen@cafedemo.com">
+    <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+  </div>
+  <p id="loginErr" style="font-weight:700"></p>
+  <p>Order aane par awaaz ke liye button ek baar dabao.<br>Is phone ki volume badha ke rakho.</p>
+  <button id="go">Login aur shuru karo</button>
 </div>
 
 <header>
@@ -43,6 +50,7 @@ button.fill{background:var(--brand);color:#fff}
   <div>
     <span class="pill" id="live">Connecting…</span>
     <button id="test">Awaaz test</button>
+    <button id="logout" hidden>Logout</button>
   </div>
 </header>
 <div id="err"></div>
@@ -59,7 +67,7 @@ window.speak = function(text){
   if(v) u.voice = v;
   speechSynthesis.speak(u);
 };
-document.getElementById("go").onclick = function(){ window.speak("Kitchen shuru ho gaya."); document.getElementById("start").hidden = true; };
+document.getElementById("go").onclick = function(){ if(window.__start){ window.__start(); } else { alert("Database load nahi hua. Hosted link se kholo aur internet on rakho."); } };
 document.getElementById("test").onclick = function(){ window.speak("Table 4 par 2 chai, 2 poha ka order aaya hai."); };
 setTimeout(function(){
   if(!window.__ready){
@@ -70,6 +78,7 @@ setTimeout(function(){
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, collection, query, orderBy, limit, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -80,7 +89,9 @@ const firebaseConfig = {
   messagingSenderId: "1020470351323",
   appId: "1:1020470351323:web:485e01607ca7ca1f36c3fe"
 };
-const db = getFirestore(initializeApp(firebaseConfig));
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 window.__ready = true;
 
 const $ = id => document.getElementById(id);
@@ -92,24 +103,52 @@ function announce(o){
   const text = `Table ${o.table} par ${parts} ka order aaya hai.`;
   window.speak(text);
 }
+/* ---------- Login ---------- */
+onAuthStateChanged(auth, user=>{
+  $("loginFields").hidden = !!user;
+  $("go").textContent = user ? "Shuru karo" : "Login aur shuru karo";
+  $("logout").hidden = !user;
+  if(user){ listen(); } else { stop(); $("start").hidden = false; }
+});
+window.__start = async function(){
+  $("loginErr").textContent = "";
+  if(!auth.currentUser){
+    try{ await signInWithEmailAndPassword(auth, $("em").value.trim(), $("pw").value); }
+    catch(e){ $("loginErr").textContent = "Email ya password galat hai."; return; }
+  }
+  $("start").hidden = true;
+  window.speak("Kitchen shuru ho gaya.");
+};
+$("logout").onclick = ()=> signOut(auth);
+
 /* ---------- Orders ---------- */
 const orders = {};
-let first = true;
-const q = query(collection(db,"orders"), orderBy("createdAt","desc"), limit(50));
-onSnapshot(q, snap=>{
-  $("live").textContent = "Live"; $("live").className = "pill on"; $("err").innerHTML = "";
-  snap.docChanges().forEach(c=>{
-    const o = c.doc.data(); o.id = c.doc.id;
-    if(c.type==="removed") delete orders[o.id]; else orders[o.id] = o;
-    if(!first && c.type==="added" && o.status==="new") announce(o);
+let first = true, unsub = null;
+function listen(){
+  if(unsub) return;
+  first = true;
+  const q = query(collection(db,"orders"), orderBy("createdAt","desc"), limit(50));
+  unsub = onSnapshot(q, snap=>{
+    $("live").textContent = "Live"; $("live").className = "pill on"; $("err").innerHTML = "";
+    snap.docChanges().forEach(c=>{
+      const o = c.doc.data(); o.id = c.doc.id;
+      if(c.type==="removed") delete orders[o.id]; else orders[o.id] = o;
+      if(!first && c.type==="added" && o.status==="new") announce(o);
+    });
+    first = false;
+    draw();
+  }, err=>{
+    console.error(err);
+    $("live").textContent = "Offline"; $("live").className = "pill";
+    $("err").innerHTML = '<div class="err">Database se connect nahi ho paya. Login aur Firestore rules check karo.</div>';
   });
-  first = false;
+}
+function stop(){
+  if(unsub){ unsub(); unsub = null; }
+  Object.keys(orders).forEach(k=>delete orders[k]);
+  $("live").textContent = "Logged out"; $("live").className = "pill";
   draw();
-}, err=>{
-  console.error(err);
-  $("live").textContent = "Offline"; $("live").className = "pill";
-  $("err").innerHTML = '<div class="err">Database se connect nahi ho paya. Internet aur Firestore rules check karo.</div>';
-});
+}
 
 function draw(){
   const rows = Object.values(orders).filter(o=>o.status!=="done")
