@@ -216,7 +216,7 @@ function render(){
     const ctrl = q===0
       ? `<button class="add" data-i="${i}" data-d="1">Add</button>`
       : `<button data-i="${i}" data-d="-1" aria-label="Kam karo">−</button><span>${q}</span><button data-i="${i}" data-d="1" aria-label="Badhao">+</button>`;
-    return `<div class="item"><div><b>${n}</b><small>${d}</small></div><div class="right"><span class="price">₹${p}</span><div class="qty">${ctrl}</div></div></div>`;
+    return `<div class="item"><div><b>${n}</b><small>${d}</small></div><div class="right"><span class="price">₹${p}</span>${TABLE ? `<div class="qty">${ctrl}</div>` : ""}</div></div>`;
   }).join("");
   list.querySelectorAll("button[data-i]").forEach(b=>{
     b.onclick = ()=>{ const [n,,p] = MENU[current][b.dataset.i]; change(n,p,+b.dataset.d); };
@@ -264,6 +264,12 @@ if(TABLE){
   document.querySelector('label[for="name"]').textContent = "Naam (optional)";
   document.querySelector(".send").textContent = "Table " + TABLE + " par order bhejo";
   document.querySelector("#order .sub").textContent = "Menu se items chuno (Add dabao), phir neeche order bhejo. Aapko table par hi mil jayega.";
+  document.querySelector("#menu .sub").textContent = "Category chuno, items Add karo aur neeche order bhejo.";
+} else {
+  /* Bina table wala link: sirf menu dekhne ke liye, order nahi */
+  document.getElementById("order").hidden = true;
+  document.getElementById("wa").hidden = true;
+  document.querySelector("#menu .sub").textContent = "Order karne ke liye cafe me apni table ka QR code scan karo.";
 }
 async function sendToKitchen(msg){
   const btn = document.querySelector(".send");
