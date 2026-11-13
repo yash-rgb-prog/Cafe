@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Chai Tapri Café – Menu, Timing & Order</title>
-<meta name="description" content="Chai Tapri Café – fresh chai, snacks aur coffee. Menu dekho aur WhatsApp par order karo.">
+<meta name="description" content="Chai Tapri Café – fresh chai, snacks aur coffee. Menu dekho aur cafe me table se order karo.">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 /* ====== CUSTOMIZE: sirf yahan se colors badlo ====== */
@@ -87,7 +87,7 @@ form input:focus,form select:focus,form textarea:focus{outline:3px solid #f4a6b0
 <section id="menu">
   <div class="wrap">
     <h2>Menu</h2>
-    <p class="sub">Category chuno. Order karne ke liye neeche WhatsApp button dabao.</p>
+    <p class="sub">Category chuno. Order karne ke liye cafe me apni table ka QR code scan karo.</p>
     <div class="tabs" id="tabs"></div>
     <div id="list"></div>
   </div>
@@ -96,7 +96,7 @@ form input:focus,form select:focus,form textarea:focus{outline:3px solid #f4a6b0
 <section id="order">
   <div class="wrap">
     <h2>Online order</h2>
-    <p class="sub">Menu me se items chuno (+ dabao), phir details bharo. Order seedha hamare WhatsApp par aayega.</p>
+    <p class="sub">Menu me se items chuno (+ dabao), phir details bharo. Order seedha kitchen ko jayega.</p>
     <div class="box">
       <h3>Aapka order</h3>
       <div id="cart"><p class="sub" style="margin:0">Abhi koi item nahi chuna.</p></div>
@@ -114,7 +114,7 @@ form input:focus,form select:focus,form textarea:focus{outline:3px solid #f4a6b0
       <input id="addr" placeholder="Jaise: Table 4, ya ghar ka pata">
       <label for="note">Note (optional)</label>
       <textarea id="note" rows="2" placeholder="Jaise: kam cheeni, extra cheese"></textarea>
-      <button class="send" type="submit">WhatsApp par order bhejo</button>
+      <button class="send" type="submit">Order bhejo</button>
       <p class="msg" id="msg" role="alert"></p>
     </form>
     <div class="box status" id="status" hidden></div>
@@ -158,7 +158,6 @@ form input:focus,form select:focus,form textarea:focus{outline:3px solid #f4a6b0
   <div class="wrap">© Chai Tapri Café · Instagram: @chaitapricafe</div>
 </footer>
 
-<a class="float" id="wa" href="#">WhatsApp par order</a>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -176,6 +175,10 @@ const db = getFirestore(initializeApp(firebaseConfig));
 
 /* Table number link se aata hai: ...?table=4 */
 const TABLE = (new URLSearchParams(location.search).get("table") || "").trim().slice(0,10);
+
+/* ====== CUSTOMIZE: Cafe ki location. lat/lng null rakho to location check band rahega.
+   Numbers nikalne ke liye cafe me jaake ye link kholo: .../Cafe/?setcafe=1  ====== */
+const CAFE_LOC = { lat: null, lng: null, radius: 150 }; // radius meter me
 
 /* ====== CUSTOMIZE: yahan se shop ka data badlo ====== */
 const PHONE = "919999999999"; // country code ke saath, bina + ke
@@ -240,17 +243,14 @@ function renderCart(){
 }
 render();
 
-/* ---------- Order → WhatsApp ---------- */
+/* ---------- Order form ---------- */
 const val = id => document.getElementById(id).value.trim();
 document.getElementById("orderForm").onsubmit = e=>{
   e.preventDefault();
   const msg = document.getElementById("msg");
   if(!Object.keys(cart).length){ msg.textContent = "Pehle menu se kam se kam ek item chuno."; return; }
   msg.textContent = "";
-  if(TABLE){ sendToKitchen(msg); return; }
-  const lines = Object.entries(cart).map(([n,i])=>`- ${i.qty} x ${n} = ₹${i.price*i.qty}`).join("\n");
-  const text = `Hi! Mujhe order karna hai:\n${lines}\nTotal: ₹${total()}\n\nNaam: ${val("name")}\nType: ${val("type")}\nTable/Pata: ${val("addr") || "-"}\nNote: ${val("note") || "-"}`;
-  window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(text)}`, "_blank");
+  if(TABLE){ sendToKitchen(msg); }
 };
 
 /* ---------- Table order → Kitchen ---------- */
@@ -263,17 +263,63 @@ if(TABLE){
   document.getElementById("name").required = false;
   document.querySelector('label[for="name"]').textContent = "Naam (optional)";
   document.querySelector(".send").textContent = "Table " + TABLE + " par order bhejo";
+  if(CAFE_LOC.lat != null){
+    document.querySelector(".send").insertAdjacentHTML("afterend", '<p class="sub" style="margin-top:8px;font-size:.85rem">Order bhejte waqt phone ki location maangi jayegi, sirf ye check karne ke liye ki aap cafe me hain.</p>');
+  }
   document.querySelector("#order .sub").textContent = "Menu se items chuno (Add dabao), phir neeche order bhejo. Aapko table par hi mil jayega.";
   document.querySelector("#menu .sub").textContent = "Category chuno, items Add karo aur neeche order bhejo.";
 } else {
   /* Bina table wala link: sirf menu dekhne ke liye, order nahi */
   document.getElementById("order").hidden = true;
-  document.getElementById("wa").hidden = true;
   document.querySelector("#menu .sub").textContent = "Order karne ke liye cafe me apni table ka QR code scan karo.";
 }
+/* ---------- Location check ---------- */
+function getPos(){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation) return rej({code:0});
+    navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+  });
+}
+function distM(lat1,lng1,lat2,lng2){
+  const R = 6371000, t = x=>x*Math.PI/180;
+  const dl = t(lat2-lat1), dn = t(lng2-lng1);
+  const h = Math.sin(dl/2)**2 + Math.cos(t(lat1))*Math.cos(t(lat2))*Math.sin(dn/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+async function atCafe(msg){
+  if(CAFE_LOC.lat == null) return true;
+  try{
+    const p = await getPos();
+    const d = distM(CAFE_LOC.lat, CAFE_LOC.lng, p.coords.latitude, p.coords.longitude);
+    if(d - Math.min(p.coords.accuracy || 0, 100) <= CAFE_LOC.radius) return true;
+    msg.textContent = "Aap cafe se door lag rahe hain. Order sirf cafe me baithe hue diya ja sakta hai.";
+  }catch(e){
+    msg.textContent = (e && e.code === 1)
+      ? "Order ke liye location ki permission (Allow) deni hogi."
+      : "Location nahi mil payi. GPS on karke dobara try karo.";
+  }
+  return false;
+}
+/* Setup helper: .../Cafe/?setcafe=1 */
+if(new URLSearchParams(location.search).has("setcafe")){
+  const b = document.createElement("div");
+  b.className = "box"; b.style.cssText = "margin:12px";
+  b.innerHTML = '<h3>Cafe ki location set karo</h3><p class="sub">Cafe me khade hokar neeche button dabao, aur jo numbers aayein wo mujhe bhej do.</p><button class="send" id="getloc" type="button">Meri location lo</button><p id="locout" style="font-weight:800;margin-top:10px"></p>';
+  document.body.prepend(b);
+  document.getElementById("getloc").onclick = async ()=>{
+    const out = document.getElementById("locout");
+    out.textContent = "Dhoondh rahe hain...";
+    try{
+      const p = await getPos();
+      out.textContent = p.coords.latitude.toFixed(6) + ", " + p.coords.longitude.toFixed(6) + "  (sahi-pan ±" + Math.round(p.coords.accuracy) + " m)";
+    }catch(e){ out.textContent = "Location nahi mili. Permission Allow karo aur GPS on karo."; }
+  };
+}
+
 async function sendToKitchen(msg){
   const btn = document.querySelector(".send");
   btn.disabled = true; btn.textContent = "Bhej rahe hain...";
+  if(!(await atCafe(msg))){ btn.disabled = false; btn.textContent = "Table " + TABLE + " par order bhejo"; return; }
   const items = Object.entries(cart).map(([n,i])=>({name:n, qty:i.qty, price:i.price}));
   const sum = total();
   try{
@@ -342,14 +388,12 @@ document.getElementById("gal").innerHTML = GALLERY.map(g=> g.src
 const REVIEWS = [
   ["Rohit S.", 5, "Chai ekdum tapri jaisi hai aur baithne ki jagah bhi badhiya. Roz aata hu."],
   ["Priya M.", 5, "Sandwich aur cold coffee best the. Staff bahut friendly hai."],
-  ["Aman K.", 4, "Prices sahi hain, WhatsApp se order karna bahut easy raha."]
+  ["Aman K.", 4, "Prices sahi hain, table se order karna bahut easy raha."]
 ];
 document.getElementById("rev").innerHTML = REVIEWS.map(([n,s,t])=>
   `<div class="review"><div class="stars" aria-label="${s} star">${"★".repeat(s)}${"☆".repeat(5-s)}</div><p>${t}</p><b>${n}</b></div>`
 ).join("");
 
-document.getElementById("wa").href =
-  `https://wa.me/${PHONE}?text=${encodeURIComponent("Hi! Mujhe order karna hai.")}`;
 </script>
 </body>
 </html>
